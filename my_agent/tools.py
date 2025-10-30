@@ -1,5 +1,6 @@
 import requests
 import json
+import os
 
 def get_gvb_disruptions():
     """
@@ -24,6 +25,29 @@ def get_gvb_disruptions():
         response.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)
         if not response.text:
             return []
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        return {"error": str(e)}
+
+def get_public_transport_route(origin: str, destination: str):
+    """
+    Fetches public transport route information from Google Maps Directions API.
+    Requires GOOGLE_MAPS_API_KEY environment variable to be set.
+    """
+    api_key = os.getenv("GOOGLE_MAPS_API_KEY")
+    if not api_key:
+        return {"error": "Google Maps API key not found. Please set the GOOGLE_MAPS_API_KEY environment variable."}
+
+    base_url = "https://maps.googleapis.com/maps/api/directions/json"
+    params = {
+        "origin": origin,
+        "destination": destination,
+        "mode": "transit",
+        "key": api_key,
+    }
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}
